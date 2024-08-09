@@ -1,6 +1,6 @@
 import sys
 sys.path.append("/root/BITCOIN")
-from Blockchain.Backend.core.EllepticCurve.EllepticCurve import Sha256Field
+from Blockchain.Backend.core.EllepticCurve.EllepticCurve import Sha256Point
 from Blockchain.Backend.util.util import hash160, hash256
 import secrets
 
@@ -9,11 +9,11 @@ class account:
     def createKeys(self):
         Gx = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
         Gy = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8
-        G = Sha256Field(Gx, Gy)
+        G = Sha256Point(Gx, Gy)
 
         privateKey = secrets.randbits(256)
         unCompressesPublicKey = privateKey * G
-        print('xx: ', unCompressesPublicKey)
+
         Xpoint = unCompressesPublicKey.x
         Ypoint = unCompressesPublicKey.y
         
