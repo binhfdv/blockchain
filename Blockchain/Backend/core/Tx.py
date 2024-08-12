@@ -6,6 +6,8 @@ REWARD = 50
 
 PRIVATE_KEY = '49698064691100101266074316661198606936488000624437982301520591921699910874228'
 MINER_ADDRESS = '15eeyrbQAogGhdXaqxiuSwLCz2vCQtp1cY'
+SIGHASH_ALL = 1
+
 
 class CoinbaseTx:
     def __init__(self, BlockHeight):
@@ -60,6 +62,32 @@ class Tx:
 
         return result
     
+    def sigh_hash(self, input_index, script_pubkey):
+        s = int_to_little_endian(self.version, 4)
+        s += encode_varint(len(self.tx_ins))
+
+        for i, tx_in in enumerate(self.tx_ins):
+            if i == input_index:
+                s += TxIn(tx_in.prev_tx, tx_in.prev_index, script_pubkey).serialize()
+            else:
+                s += TxIn(tx_in.prev_tx, tx_in.prev_index).serialize()
+        
+        s += encode_varint(len(self.tx_outs))
+
+        for tx_out in self.tx_outs:
+            s += tx_out.serialize()
+
+        s += int_to_little_endian(self.locktime, 4)
+        s += int_to_little_endian(SIGHASH_ALL, 4)
+        h256 = hash256(s)
+        return int.from_bytes(h256, "big")
+
+    def sign_input(self, input_index, private_key, script_pubkey):
+        z = self.sigh_hash(input_index, script_pubkey)
+        der = private_key.sign(z).der()
+        sig = der + SIGHASH_ALL.to_bytes(1, "big")
+        sec = private_key.point.sec()
+        self.tx_ins[input_index].script_sig = Script([sig, sec])
 
     def is_coinbase(self):
         """
